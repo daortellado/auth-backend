@@ -3,6 +3,7 @@ const app = express();
 const bodyParser = require("body-parser");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const cors = require('cors');
 
 // require database connection
 const dbConnect = require("./db/dbConnect");
@@ -12,7 +13,6 @@ const auth = require("./auth");
 // execute database connection
 dbConnect();
 
-var cors = require('cors');
 app.use(cors())
 
 // body parser configuration
