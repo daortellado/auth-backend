@@ -169,8 +169,7 @@ app.get("/free-endpoint", (request, response) => {
 // authentication endpoint
 app.get("/auth-endpoint", auth, (request, response) => {
   const videocontents = "test";
-  response.send({ message: "Select a game below" });
-  response.send({ videolist: videocontents });
+  response.send({ message: "Select a game below", videolist: videocontents });
 });
 
 module.exports = app;
