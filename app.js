@@ -163,12 +163,12 @@ app.post("/login", (request, response) => {
 
 // free endpoint
 app.get("/free-endpoint", (request, response) => {
-  response.json({ message: Video.game });
+  response.json({ message: "Admin Logged In" });
 });
 
 // authentication endpoint
 app.get("/auth-endpoint", auth, (request, response) => {
-  response.send({ message: "You are authorized to access me" });
+  response.send({ message: "Select a game below" });
 });
 
 module.exports = app;
