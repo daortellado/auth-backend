@@ -163,7 +163,7 @@ app.post("/login", (request, response) => {
 
 // free endpoint
 app.get("/free-endpoint", (request, response) => {
-  response.json({ message: "You are free to access me anytime" });
+  response.json({ message: Video.game });
 });
 
 // authentication endpoint
