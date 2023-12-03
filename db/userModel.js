@@ -15,6 +15,11 @@ const UserSchema = new mongoose.Schema({
     required: [true, "Please provide a password!"],
     unique: false,
   },
+  //   admin
+  admin: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 // export UserSchema
