@@ -13,7 +13,7 @@ const auth = require("./auth");
 // execute database connection
 dbConnect();
 
-app.use(cors())
+app.use(cors({ origin: true }));
 
 // body parser configuration
 app.use(bodyParser.json());
