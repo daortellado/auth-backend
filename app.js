@@ -12,11 +12,8 @@ const auth = require("./auth");
 // execute database connection
 dbConnect();
 
-app.use(function(req, res, next) {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "X-Requested-With");
-  next();
-  });
+var cors = require('cors');
+app.use(cors())
 
 // body parser configuration
 app.use(bodyParser.json());
