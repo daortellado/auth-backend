@@ -3,13 +3,13 @@ const mongoose = require("mongoose");
 // video schema
 const VideoSchema = new mongoose.Schema({
   // name field
-  name: {
+  videoname : {
     type: String,
     required: [true, "Please provide an video name"],
     unique: [false],
   },
     // game field
-    name: {
+    game: {
         type: String,
         required: [true, "Please select a game"],
         unique: [false],

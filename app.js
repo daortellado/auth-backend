@@ -7,6 +7,7 @@ const jwt = require("jsonwebtoken");
 // require database connection
 const dbConnect = require("./db/dbConnect");
 const User = require("./db/userModel");
+const Video = require("./db/videoModel");
 const auth = require("./auth");
 
 // execute database connection
@@ -73,6 +74,35 @@ app.post("/register", (request, response) => {
       });
     });
 });
+
+// registervideo endpoint
+app.post("/addvideo", (request, response) => {
+      // create a new video instance and collect the data
+      const video = new Video({
+        videoname: request.body.videoname,
+        game: request.body.game,
+        link: request.body.link,
+      });
+
+      // save the new video
+      video
+        .save()
+        // return success if the new video is added to the database successfully
+        .then((result) => {
+          response.status(201).send({
+            message: "Video Created Successfully",
+            result,
+          });
+        })
+        // catch erroe if the new video wasn't added successfully to the database
+        .catch((error) => {
+          response.status(500).send({
+            message: "Error creating video",
+            error,
+          });
+        });
+    })
+;
 
 // login endpoint
 app.post("/login", (request, response) => {
