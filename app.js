@@ -9,6 +9,7 @@ const dbConnect = require("./db/dbConnect");
 const User = require("./db/userModel");
 const Video = require("./db/videoModel");
 const auth = require("./auth");
+const videoRoutes = require("./controllers/video.controller")
 
 // execute database connection
 dbConnect();
@@ -31,10 +32,14 @@ app.use((req, res, next) => {
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+// test
+
 app.get("/", (request, response, next) => {
   response.json({ message: "Hey! This is your server response!" });
   next();
 });
+
+app.use('/api/video', videoRoutes)
 
 // register endpoint
 app.post("/register", (request, response) => {
@@ -168,8 +173,7 @@ app.get("/free-endpoint", (request, response) => {
 
 // authentication endpoint
 app.get("/auth-endpoint", auth, (request, response) => {
-  const videocontents = this.props.Videos[0];
-  response.send({ message: "Select a game below", videolist: videocontents });
+  response.send({ message: "Select a game below" });
 });
 
 module.exports = app;
