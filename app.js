@@ -87,6 +87,7 @@ app.post("/addvideo", (request, response) => {
         videoname: request.body.videoname,
         game: request.body.game,
         link: request.body.link,
+        tags: request.body.tags,
       });
 
       // save the new video

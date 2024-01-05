@@ -14,12 +14,13 @@ const VideoSchema = new mongoose.Schema({
         required: [true, "Please select a game"],
         unique: [false],
       },
-  //   password field
+  //   video link field
   link: {
     type: String,
     required: [true, "Please provide a video link"],
     unique: false,
   },
+  tags: [String],
 });
 
 // export VideoSchema
