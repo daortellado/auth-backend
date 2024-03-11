@@ -207,4 +207,22 @@ app.put("/api/video/:videoName", auth, async (req, res) => {
   }
 });
 
+app.get("/api/video/:videoName", async (req, res) => {
+  const videoName = req.params.videoName;
+  const game = req.query.game; // Access game from query parameter
+
+  try {
+    const video = await Video.findOne({ videoname: videoName, game: game });
+
+    if (!video) {
+      return res.status(404).send({ message: "Video not found" });
+    }
+
+    // Handle retrieving and sending the video data...
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Error fetching video" });
+  }
+});
+
 module.exports = app;
