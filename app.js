@@ -9,14 +9,14 @@ const dbConnect = require("./db/dbConnect");
 const User = require("./db/userModel");
 const Video = require("./db/videoModel");
 const auth = require("./auth");
-const videoRoutes = require("./controllers/video.controller")
+const videoRoutes = require("./controllers/video.controller"); // Assuming video controller
 
 // execute database connection
 dbConnect();
 
 // Curb Cores Error by adding a header here
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Origin", "*"); // Allow requests from any origin (adjust for production)
   res.setHeader(
     "Access-Control-Allow-Headers",
     "Origin, X-Requested-With, Content, Accept, Content-Type, Authorization"
@@ -39,7 +39,7 @@ app.get("/", (request, response, next) => {
   next();
 });
 
-app.use('/api/video', videoRoutes)
+app.use("/api/video", videoRoutes); // Use video routes for video endpoints
 
 // register endpoint
 app.post("/register", (request, response) => {
@@ -175,6 +175,36 @@ app.get("/free-endpoint", (request, response) => {
 // authentication endpoint
 app.get("/auth-endpoint", auth, (request, response) => {
   response.send({ message: "Select a game below" });
+});
+
+// New endpoint for editing video
+app.put("/api/video/:videoName", auth, async (req, res) => {
+  // Get video name from URL parameter
+  const videoName = req.params.videoName;
+
+  // Extract updated video data from request body
+  const updatedVideo = req.body;
+
+  try {
+    // Find the video by name (assuming videoName is unique)
+    const existingVideo = await Video.findOne({ videoname: videoName });
+
+    if (!existingVideo) {
+      return res.status(404).send({ message: "Video not found" });
+    }
+
+    // Update existing video properties with the provided data
+    existingVideo.link = updatedVideo.link || existingVideo.link; // Update link if provided
+    existingVideo.tags = updatedVideo.tags || existingVideo.tags; // Update tags if provided
+
+    // Save the updated video
+    await existingVideo.save();
+
+    res.status(200).send({ message: "Video updated successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({ message: "Error updating video" });
+  }
 });
 
 module.exports = app;
