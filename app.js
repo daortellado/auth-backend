@@ -14,7 +14,7 @@ const ffmpeg = require('fluent-ffmpeg');
 
 // //videomerge
 const { execSync } = require('child_process'); // For ffmpeg execution
-const mergeVideos = require('./path/to/mergeVideos.js'); // Adjust the path
+const mergeVideos = require('./mergeVideos.js'); // Adjust the path
 
 // execute database connection
 dbConnect();
