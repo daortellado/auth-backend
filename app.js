@@ -11,8 +11,9 @@ const Video = require("./db/videoModel");
 const auth = require("./auth");
 const videoRoutes = require("./controllers/video.controller"); // Assuming video controller
 
-//videomerge
-const mergeVideos = require('./mergeVideos'); // Assuming the file is in the same directory
+// //videomerge
+const { execSync } = require('child_process'); // For ffmpeg execution
+// const mergeVideos = require('./mergeVideos'); // Assuming the file is in the same directory
 
 // execute database connection
 dbConnect();
@@ -45,12 +46,21 @@ app.get("/", (request, response, next) => {
 //videomerge endpoint
 app.post('/merge-videos', async (req, res) => {
   const { videoLinks } = req.body;
-  const mergedFilename = await mergeVideos(videoLinks);
 
-  if (mergedFilename) {
-    res.json({ filename: mergedFilename }); // Send merged video filename back to React component
-  } else {
-    res.status(500).send('Error merging videos'); // Handle merging error
+  try {
+    // Command to merge videos using ffmpeg (replace with your specific command)
+    const mergeCommand = 'ffmpeg -i "concat:$(for url in "${videoLinks[@]}"; do echo -n "input=${url}|"; done)" -c copy output.mp4';
+    const mergedVideo = execSync(mergeCommand);  // Execute ffmpeg and capture outputg
+
+    // Set appropriate headers for download
+    res.setHeader('Content-Type', 'video/mp4');
+    res.setHeader('Content-Disposition', 'attachment; filename=combined_clips.mp4');
+    res.send(mergedVideo);  // Send the merged video data directly in the response
+
+  } catch (error) {
+    console.error('Error merging videos:', error);
+    // Handle merge error (e.g., return error message to client)
+    return res.status(500).send('Error merging videos');
   }
 });
 
