@@ -14,14 +14,13 @@ async function mergeVideos(videoLinks) {
       .ffprobe((err, info) => {
         if (err) {
           console.error('Error analyzing video:', videoLink, err);
-          // Handle individual video analysis error (optional)
-          continue; // Skip to next video if analysis fails
+          // Optional: Handle the error (e.g., log or skip silently)
+        } else {
+          // Access and log specific data
+          console.log('Video Codec:', videoLink, info.format.streams[0].codec_name);
+          console.error('Video Resolution:', videoLink, info.format.streams[0].width, 'x', info.format.streams[0].height);
+          console.error('Video Duration:', videoLink, info.format.duration);
         }
-
-        // Access and log specific data
-        console.log('Video Codec:', videoLink, info.format.streams[0].codec_name);
-        console.error('Video Resolution:', videoLink, info.format.streams[0].width, 'x', info.format.streams[0].height);
-        console.error('Video Duration:', videoLink, info.format.duration);
       });
   }
 
