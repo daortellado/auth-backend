@@ -10,10 +10,11 @@ const User = require("./db/userModel");
 const Video = require("./db/videoModel");
 const auth = require("./auth");
 const videoRoutes = require("./controllers/video.controller"); // Assuming video controller
-const ffmpeg = require('fluent-ffmpeg');
+// const ffmpeg = require('fluent-ffmpeg');
+const videoStream = require('video-stream');
 
 // //videomerge
-const { execSync } = require('child_process'); // For ffmpeg execution
+// const { execSync } = require('child_process'); // For ffmpeg execution
 const mergeVideos = require('./mergeVideos.js'); // Adjust the path
 
 // execute database connection
@@ -49,27 +50,19 @@ app.post('/merge-videos', async (req, res) => {
   const { videoLinks } = req.body;
 
   try {
-    const mergedFilename = await mergeVideos(videoLinks);
-    if (mergedFilename) {
+    const mergedStream = await mergeVideos(videoLinks); // Assuming mergeVideos returns a command string for ffmpeg
+    if (mergedStream) {
+      const stream = videoStream(mergedStream);
+
       res.setHeader('Content-Type', 'video/mp4');
       res.setHeader('Accept-Ranges', 'bytes'); // Allow byte-range requests
 
-      const mergedStream = fs.createWriteStream('merged_video.mp4'); // Adjust filename if needed
-
-      ffmpeg()
-        // ... (your existing ffmpeg command logic for merging videos)
-        .on('end', () => {
-          console.log('Videos merged successfully!');
-          mergedStream.close(); // Close the stream after ffmpeg finishes
-        })
-        .pipe(mergedStream);
-
-      mergedStream.on('error', (err) => {
+      stream.on('error', (err) => {
         console.error('Error streaming video:', err);
         res.status(500).send('Error streaming video');
       });
 
-      mergedStream.pipe(res); // Pipe the stream to the response
+      stream.pipe(res); // Pipe the stream to the response for streaming
     } else {
       res.status(500).send('Error merging videos');
     }
