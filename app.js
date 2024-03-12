@@ -51,10 +51,26 @@ app.post('/merge-videos', async (req, res) => {
   try {
     const mergedFilename = await mergeVideos(videoLinks);
     if (mergedFilename) {
-      // Send response with the merged video filename
-      res.json({ filename: mergedFilename });
+      res.setHeader('Content-Type', 'video/mp4');
+      res.setHeader('Accept-Ranges', 'bytes'); // Allow byte-range requests
+
+      const mergedStream = fs.createWriteStream('merged_video.mp4'); // Adjust filename if needed
+
+      ffmpeg()
+        // ... (your existing ffmpeg command logic for merging videos)
+        .on('end', () => {
+          console.log('Videos merged successfully!');
+          mergedStream.close(); // Close the stream after ffmpeg finishes
+        })
+        .pipe(mergedStream);
+
+      mergedStream.on('error', (err) => {
+        console.error('Error streaming video:', err);
+        res.status(500).send('Error streaming video');
+      });
+
+      mergedStream.pipe(res); // Pipe the stream to the response
     } else {
-      // Handle errors during merging
       res.status(500).send('Error merging videos');
     }
   } catch (error) {
