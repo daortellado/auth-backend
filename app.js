@@ -31,6 +31,17 @@ app.use((req, res, next) => {
   next();
 });
 
+// body parser configuration
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// test
+
+app.get("/", (request, response, next) => {
+  response.json({ message: "Hey! This is your server response!" });
+  next();
+});
+
 //videomerge endpoint
 app.post('/merge-videos', async (req, res) => {
   const { videoLinks } = req.body;
@@ -41,17 +52,6 @@ app.post('/merge-videos', async (req, res) => {
   } else {
     res.status(500).send('Error merging videos'); // Handle merging error
   }
-});
-
-// body parser configuration
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
-// test
-
-app.get("/", (request, response, next) => {
-  response.json({ message: "Hey! This is your server response!" });
-  next();
 });
 
 app.use("/api/video", videoRoutes); // Use video routes for video endpoints
