@@ -16,10 +16,15 @@ async function mergeVideos(videoLinks) {
           console.error('Error analyzing video:', videoLink, err);
           // Optional: Handle the error (e.g., log or skip silently)
         } else {
-          // Access and log specific data
-          console.log('Video Codec:', videoLink, info.format.streams[0].codec_name);
-          console.error('Video Resolution:', videoLink, info.format.streams[0].width, 'x', info.format.streams[0].height);
-          console.error('Video Duration:', videoLink, info.format.duration);
+          // Check for missing data and handle accordingly
+          if (info.format && info.format.streams && info.format.streams.length > 0) {
+            console.log('Video Codec:', videoLink, info.format.streams[0].codec_name);
+            console.error('Video Resolution:', videoLink, info.format.streams[0].width, 'x', info.format.streams[0].height);
+            console.error('Video Duration:', videoLink, info.format.streams[0].duration);
+          } else {
+            console.error('Failed to get video information for:', videoLink);
+            // Handle missing data (e.g., retry processing, skip video)
+          }
         }
       });
   }
@@ -38,7 +43,10 @@ async function mergeVideos(videoLinks) {
 
   try {
     await command.on('end', () => console.log('Videos merged successfully!'))
-      .on('error', (err) => console.error('Error merging videos:', err))
+      .on('error', (err) => {
+        console.error('Error merging videos:', err);
+        // Handle specific ffmpeg errors (e.g., incompatible codecs)
+      })
       .run();
 
     return outputFilename; // Return the output filename
