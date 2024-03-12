@@ -14,11 +14,6 @@ const videoRoutes = require("./controllers/video.controller"); // Assuming video
 //videomerge
 const mergeVideos = require('./mergeVideos'); // Assuming the file is in the same directory
 
-//bodyparser
-const bodyParser = require('body-parser');
-
-app.use(bodyParser.json()); // Parse JSON bodies
-
 // execute database connection
 dbConnect();
 
