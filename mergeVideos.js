@@ -1,5 +1,7 @@
 const ffmpeg = require('fluent-ffmpeg');
 
+ffmpeg.logger = console;  // Logs messages to the console
+
 async function mergeVideos(videoLinks) {
   const outputFilename = 'merged_clips.mp4';
 
