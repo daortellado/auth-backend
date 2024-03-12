@@ -11,6 +11,9 @@ const Video = require("./db/videoModel");
 const auth = require("./auth");
 const videoRoutes = require("./controllers/video.controller"); // Assuming video controller
 
+//videomerge
+const mergeVideos = require('./mergeVideos'); // Assuming the file is in the same directory
+
 // execute database connection
 dbConnect();
 
@@ -26,6 +29,18 @@ app.use((req, res, next) => {
     "GET, POST, PUT, DELETE, PATCH, OPTIONS"
   );
   next();
+});
+
+//videomerge endpoint
+app.post('/merge-videos', async (req, res) => {
+  const { videoLinks } = req.body;
+  const mergedFilename = await mergeVideos(videoLinks);
+
+  if (mergedFilename) {
+    res.json({ filename: mergedFilename }); // Send merged video filename back to React component
+  } else {
+    res.status(500).send('Error merging videos'); // Handle merging error
+  }
 });
 
 // body parser configuration
