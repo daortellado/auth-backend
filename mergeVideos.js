@@ -5,14 +5,17 @@ ffmpeg.logger = console;  // Logs messages to the console
 async function mergeVideos(videoLinks) {
   const outputFilename = 'merged_clips.mp4';
 
+  // Process each video link individually
   for (const videoLink of videoLinks) {
+    console.log('Processing video:', videoLink);
+
     // ffprobe to get specific data before processing
     await ffmpeg(videoLink)
       .ffprobe((err, info) => {
         if (err) {
           console.error('Error analyzing video:', videoLink, err);
           // Handle individual video analysis error (optional)
-          return;
+          continue; // Skip to next video if analysis fails
         }
 
         // Access and log specific data
@@ -22,9 +25,17 @@ async function mergeVideos(videoLinks) {
       });
   }
 
+  // Assuming the first video link is the "first part"
+  const firstVideo = videoLinks[0];
+
   const command = ffmpeg()
-    .concat(videoLinks.map(link => ({ url: link }))) // Add each video link
+    .input(firstVideo) // Use the first video as input
     .output(outputFilename);
+
+  // Optionally add the remaining videos using concat
+  for (let i = 1; i < videoLinks.length; i++) {
+    command.concat(videoLinks[i]);
+  }
 
   try {
     await command.on('end', () => console.log('Videos merged successfully!'))
