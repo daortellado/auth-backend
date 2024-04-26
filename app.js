@@ -1,4 +1,5 @@
 const express = require("express");
+const cors = require('cors');
 const app = express();
 const bodyParser = require("body-parser");
 const bcrypt = require("bcrypt");
@@ -23,6 +24,9 @@ const mergeVideos = require('./mergeVideos.js'); // Adjust the path
 
 // execute database connection
 dbConnect();
+
+// cors
+app.use(cors());
 
 // Curb Cores Error by adding a header here
 app.use((req, res, next) => {
