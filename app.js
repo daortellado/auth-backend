@@ -229,8 +229,8 @@ app.get("/auth-endpoint", auth, (request, response) => {
 // Moving CreateSquadReel logic to backend
 // Set up AWS credentials
 AWS.config.update({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  accessKeyId: process.env.REACT_APP_AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.REACT_APP_AWS_SECRET_ACCESS_KEY,
   region: "us-east-1", // Adjust the region as needed
 });
 
@@ -353,10 +353,10 @@ async function sendEmail(userEmail, downloadUrl) {
   try {
     // Send email using EmailJS
     await emailjs.send(
-      process.env.EMAILJS_SERVICE_ID,
-      process.env.EMAILJS_TEMPLATE_ID,
+      process.env.REACT_APP_EMAILJS_SERVICE_ID,
+      process.env.REACT_APP_EMAILJS_TEMPLATE_ID,
       templateParams,
-      process.env.EMAILJS_USER_ID
+      process.env.REACT_APP_EMAILJS_USER_ID
     );
     return true; // Email sent successfully
   } catch (error) {
