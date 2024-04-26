@@ -238,11 +238,11 @@ const s3 = new AWS.S3();
 
 // Endpoint for MySquadReel creation
 app.post("/create-mysquadreel", async (req, res) => {
-  const { selectedClips, userEmail } = req.body;
+  const { playlistContent, userEmail } = req.body;
 
   try {
     // Create MediaConvert job
-    const downloadUrl = await createMySquadReel(selectedClips);
+    const downloadUrl = await createMySquadReel(playlistContent);
 
     // Send email with the download URL
     const emailSent = await sendEmail(userEmail, downloadUrl);
@@ -261,7 +261,7 @@ app.post("/create-mysquadreel", async (req, res) => {
   }
 });
 
-async function createMySquadReel(selectedClips) {
+async function createMySquadReel(playlistContent) {
   // Initialize MediaConvert instance
   const mediaconvert = new MediaConvert({ apiVersion: "2017-08-29" });
 
@@ -269,7 +269,7 @@ async function createMySquadReel(selectedClips) {
   const jobParams = {
     Role: "arn:aws:iam::816121288668:role/AWSMediaConvertReact",
     Settings: {
-      Inputs: selectedClips.map((url) => ({
+      Inputs: playlistContent.map((url) => ({
         FileInput: url,
         AudioSelectors: {
           "Audio Selector 1": {
