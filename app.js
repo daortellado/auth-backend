@@ -256,6 +256,30 @@ app.post("/create-mysquadreel", async (req, res) => {
   }
 });
 
+app.post("/create-mysquadreel", async (req, res) => {
+  const { selectedClips, userEmail } = req.body;
+
+  try {
+    // Create MediaConvert job
+    const downloadUrl = await createMySquadReel(selectedClips);
+
+    // Send email with the download URL
+    const emailSent = await sendEmail(userEmail, downloadUrl);
+
+    if (emailSent) {
+      // Respond to client indicating success
+      res.status(200).send({ message: "MySquadReel creation and email sending successful" });
+    } else {
+      // Handle if email sending fails
+      res.status(500).send({ message: "Error sending email" });
+    }
+  } catch (error) {
+    console.error("Error creating MySquadReel and sending email:", error);
+    // Handle errors and respond accordingly
+    res.status(500).send({ message: "Error creating MySquadReel and sending email" });
+  }
+});
+
 async function createMySquadReel(selectedClips) {
   // Initialize MediaConvert instance
   const mediaconvert = new MediaConvert({ apiVersion: "2017-08-29" });
@@ -264,8 +288,8 @@ async function createMySquadReel(selectedClips) {
   const jobParams = {
     Role: "arn:aws:iam::816121288668:role/AWSMediaConvertReact",
     Settings: {
-      Inputs: selectedClips.map((link) => ({
-        FileInput: link,
+      Inputs: playlistContent.map((url) => ({
+        FileInput: url,
         AudioSelectors: {
           "Audio Selector 1": {
             Offset: 0,
@@ -274,8 +298,43 @@ async function createMySquadReel(selectedClips) {
           },
         },
       })),
-      // Define output settings...
-    },
+      OutputGroups: [
+        {
+          Name: "SingleOutputGroup",
+          OutputGroupSettings: {
+            Type: "FILE_GROUP_SETTINGS",
+            FileGroupSettings: {
+              Destination: "s3://mysquadreeldownload/MySquadReel",
+            },
+          },
+          Outputs: [
+            {
+              Preset: "System-Generic_Hd_Mp4_Av1_Aac_16x9_640x360p_24Hz_250Kbps_Qvbr_Vq6",
+              NameModifier: `_${Date.now()}`,
+              VideoDescription: {
+                Width: 640,
+                Height: 360,
+                VideoPreprocessors: {
+                  ImageInserter: {
+                    InsertableImages: [
+                      {
+                        ImageX: 100,
+                        ImageY: 25,
+                        Height: 75,
+                        Width: 75,
+                        Layer: 1,
+                        ImageInserterInput: "s3://squadreelogo/squadreel.png",
+                        Opacity: 50,
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+          ],
+        },
+      ],
+    }
   };
 
   // Create MediaConvert job
@@ -310,13 +369,19 @@ async function sendEmail(userEmail, downloadUrl) {
     reply_to: "contact@squadreel.com",
   };
 
-  // Send email using EmailJS
-  await emailjs.send(
-    process.env.EMAILJS_SERVICE_ID,
-    process.env.EMAILJS_TEMPLATE_ID,
-    templateParams,
-    process.env.EMAILJS_USER_ID
-  );
+  try {
+    // Send email using EmailJS
+    await emailjs.send(
+      process.env.EMAILJS_SERVICE_ID,
+      process.env.EMAILJS_TEMPLATE_ID,
+      templateParams,
+      process.env.EMAILJS_USER_ID
+    );
+    return true; // Email sent successfully
+  } catch (error) {
+    console.error("Error sending email:", error);
+    return false; // Email sending failed
+  }
 }
 
 // New endpoint for editing video
