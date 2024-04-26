@@ -245,25 +245,6 @@ app.post("/create-mysquadreel", async (req, res) => {
     const downloadUrl = await createMySquadReel(selectedClips);
 
     // Send email with the download URL
-    await sendEmail(userEmail, downloadUrl);
-
-    // Respond to client indicating success
-    res.status(200).send({ message: "MySquadReel creation and email sending successful" });
-  } catch (error) {
-    console.error("Error creating MySquadReel and sending email:", error);
-    // Handle errors and respond accordingly
-    res.status(500).send({ message: "Error creating MySquadReel and sending email" });
-  }
-});
-
-app.post("/create-mysquadreel", async (req, res) => {
-  const { selectedClips, userEmail } = req.body;
-
-  try {
-    // Create MediaConvert job
-    const downloadUrl = await createMySquadReel(selectedClips);
-
-    // Send email with the download URL
     const emailSent = await sendEmail(userEmail, downloadUrl);
 
     if (emailSent) {
@@ -288,7 +269,7 @@ async function createMySquadReel(selectedClips) {
   const jobParams = {
     Role: "arn:aws:iam::816121288668:role/AWSMediaConvertReact",
     Settings: {
-      Inputs: playlistContent.map((url) => ({
+      Inputs: selectedClips.map((url) => ({
         FileInput: url,
         AudioSelectors: {
           "Audio Selector 1": {
