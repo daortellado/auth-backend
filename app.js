@@ -12,6 +12,11 @@ const auth = require("./auth");
 const videoRoutes = require("./controllers/video.controller"); // Assuming video controller
 const ffmpeg = require('fluent-ffmpeg');
 
+// Import necessary modules for aws and emailjs jobs
+const MediaConvert = require("aws-sdk/clients/mediaconvert");
+const AWS = require("aws-sdk");
+const emailjs = require("emailjs-com");
+
 // //videomerge
 const { execSync } = require('child_process'); // For ffmpeg execution
 const mergeVideos = require('./mergeVideos.js'); // Adjust the path
@@ -216,6 +221,102 @@ app.get("/free-endpoint", (request, response) => {
 app.get("/auth-endpoint", auth, (request, response) => {
   response.send({ message: "Select a game below" });
 });
+
+// Moving CreateSquadReel logic to backend
+// Set up AWS credentials
+AWS.config.update({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: "us-east-1", // Adjust the region as needed
+});
+
+const s3 = new AWS.S3();
+
+// Endpoint for MySquadReel creation
+app.post("/create-mysquadreel", async (req, res) => {
+  const { selectedClips, userEmail } = req.body;
+
+  try {
+    // Create MediaConvert job
+    const downloadUrl = await createMySquadReel(selectedClips);
+
+    // Send email with the download URL
+    await sendEmail(userEmail, downloadUrl);
+
+    // Respond to client indicating success
+    res.status(200).send({ message: "MySquadReel creation and email sending successful" });
+  } catch (error) {
+    console.error("Error creating MySquadReel and sending email:", error);
+    // Handle errors and respond accordingly
+    res.status(500).send({ message: "Error creating MySquadReel and sending email" });
+  }
+});
+
+async function createMySquadReel(selectedClips) {
+  // Initialize MediaConvert instance
+  const mediaconvert = new MediaConvert({ apiVersion: "2017-08-29" });
+
+  // Construct playlist content from selected video clips
+  const playlistContent = selectedClips.map((clip) => ({ fileInput: clip.link }));
+
+  // Set up job parameters
+  const jobParams = {
+    Role: "arn:aws:iam::816121288668:role/AWSMediaConvertReact",
+    Settings: {
+      Inputs: playlistContent.map((url) => ({
+        FileInput: url,
+        AudioSelectors: {
+          "Audio Selector 1": {
+            Offset: 0,
+            DefaultSelection: "DEFAULT",
+            ProgramSelection: 1,
+          },
+        },
+      })),
+      // Define output settings...
+    },
+  };
+
+  // Create MediaConvert job
+  const job = await mediaconvert.createJob(jobParams).promise();
+
+  // Wait for job completion
+  let jobStatus;
+  do {
+    const { Job } = await mediaconvert.getJob({ Id: job.Job.Id }).promise();
+    jobStatus = Job.Status;
+    await new Promise((resolve) => setTimeout(resolve, 5000)); // Wait for 5 seconds before checking job status again
+  } while (jobStatus !== "COMPLETE");
+
+  // Generate download URL for the output file
+  const bucket = "mysquadreeldownload";
+  const key = "MySquadReel" + jobParams.Settings.OutputGroups[0].Outputs[0].NameModifier + ".mp4";
+  const params = {
+    Bucket: bucket,
+    Key: key,
+    Expires: 3600,
+  };
+  const downloadUrl = s3.getSignedUrl("getObject", params);
+
+  return downloadUrl;
+}
+
+async function sendEmail(userEmail, downloadUrl) {
+  // Configure EmailJS template parameters
+  const templateParams = {
+    to_name: userEmail,
+    message: `Your download is ready: ${downloadUrl}`,
+    reply_to: "contact@squadreel.com",
+  };
+
+  // Send email using EmailJS
+  await emailjs.send(
+    process.env.EMAILJS_SERVICE_ID,
+    process.env.EMAILJS_TEMPLATE_ID,
+    templateParams,
+    process.env.EMAILJS_USER_ID
+  );
+}
 
 // New endpoint for editing video
 app.put("/api/video/:videoName", auth, async (req, res) => {
