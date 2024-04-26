@@ -360,8 +360,8 @@ async function sendEmail(userEmail, downloadUrl) {
       subject: 'Your highlights are here 🎞️',
       html: `
       <div style="font-family: Arial, sans-serif;">
-      <h2 style="color: #333;">Good news!</h2>
-      <p style="color: #666;">The clips you selected for download are now available:</p>
+      <h2 style="color: #333;">Good news - they're ready!</h2>
+      <p style="color: #666;">The clips you selected are now available below:</p>
       <a href="${downloadUrl}" style="background-color: #007bff; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Download MySquadReel</a>
       <p><em>This link will only be active for 24 hours.</em></p>
       <p>&nbsp;</p>
