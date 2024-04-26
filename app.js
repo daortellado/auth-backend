@@ -260,15 +260,12 @@ async function createMySquadReel(selectedClips) {
   // Initialize MediaConvert instance
   const mediaconvert = new MediaConvert({ apiVersion: "2017-08-29" });
 
-  // Construct playlist content from selected video clips
-  const playlistContent = selectedClips.map((clip) => ({ fileInput: clip.link }));
-
   // Set up job parameters
   const jobParams = {
     Role: "arn:aws:iam::816121288668:role/AWSMediaConvertReact",
     Settings: {
-      Inputs: playlistContent.map((url) => ({
-        FileInput: url,
+      Inputs: selectedClips.map((link) => ({
+        FileInput: link,
         AudioSelectors: {
           "Audio Selector 1": {
             Offset: 0,
