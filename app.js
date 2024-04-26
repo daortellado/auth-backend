@@ -299,11 +299,11 @@ async function createMySquadReel(playlistContent) {
           },
           Outputs: [
             {
-              Preset: "System-Generic_Hd_Mp4_Av1_Aac_16x9_640x360p_24Hz_250Kbps_Qvbr_Vq6",
+              Preset: "System-Generic_Hd_Mp4_Av1_Aac_16x9_1280x720p_24Hz_1Mbps_Qvbr_Vq6",
               NameModifier: `_${Date.now()}`,
               VideoDescription: {
-                Width: 640,
-                Height: 360,
+                Width: 1280,
+                Height: 720,
                 VideoPreprocessors: {
                   ImageInserter: {
                     InsertableImages: [
