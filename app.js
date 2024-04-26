@@ -4,6 +4,8 @@ const app = express();
 const bodyParser = require("body-parser");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
+const sgTransport = require("nodemailer-sendgrid-transport");
 
 // require database connection
 const dbConnect = require("./db/dbConnect");
@@ -236,6 +238,13 @@ AWS.config.update({
 
 const s3 = new AWS.S3();
 
+// Set up SendGrid transporter
+const transporter = nodemailer.createTransport(sgTransport({
+  auth: {
+    api_key: process.env.SENDGRID_API_KEY, // Your SendGrid API key
+  },
+}));
+
 // Endpoint for MySquadReel creation
 app.post("/create-mysquadreel", async (req, res) => {
   const { playlistContent, userEmail } = req.body;
@@ -343,24 +352,17 @@ async function createMySquadReel(playlistContent) {
 }
 
 async function sendEmail(userEmail, downloadUrl) {
-  // Configure EmailJS template parameters
-  const templateParams = {
-    to_name: userEmail,
-    message: `Your download is ready: ${downloadUrl}`,
-    reply_to: "contact@squadreel.com",
-  };
-
   try {
-    // Send email using EmailJS
-    await emailjs.send(
-      process.env.REACT_APP_EMAILJS_SERVICE_ID,
-      process.env.REACT_APP_EMAILJS_TEMPLATE_ID,
-      templateParams,
-      process.env.REACT_APP_EMAILJS_USER_ID
-    );
+    // Send email using nodemailer
+    await transporter.sendMail({
+      from: 'contact@squadreel.com', // Sender email address
+      to: userEmail, // Recipient email address
+      subject: 'MySquadReel download is ready!',
+      text: `Simply right click on the video and select "Save Video As..." to download. This link will be active for 24 hours.: ${downloadUrl}`,
+    });
     return true; // Email sent successfully
   } catch (error) {
-    console.error("Error sending email:", error);
+    console.error('Error sending email:', error);
     return false; // Email sending failed
   }
 }

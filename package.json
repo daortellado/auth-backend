@@ -21,6 +21,8 @@
     "heroku": "^7.46.0",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.13.21",
+    "nodemailer": "^6.9.13",
+    "nodemailer-sendgrid-transport": "^0.2.0",
     "react-ffmpeg": "^0.0.35",
     "video-stream": "^1.2.1"
   },
