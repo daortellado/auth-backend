@@ -355,10 +355,19 @@ async function sendEmail(userEmail, downloadUrl) {
   try {
     // Send email using nodemailer
     await transporter.sendMail({
-      from: 'contact@squadreel.com', // Sender email address
+      from: '"SquadReel Admin" <contact@squadreel.com>', // Sender name and email address
       to: userEmail, // Recipient email address
-      subject: 'MySquadReel download is ready!',
-      text: `Simply right click on the video and select "Save Video As..." to download. This link will be active for 24 hours.: ${downloadUrl}`,
+      subject: 'Your highlights are here 🎞️',
+      html: `
+      <div style="font-family: Arial, sans-serif;">
+      <h2 style="color: #333;">Good news!</h2>
+      <p style="color: #666;">The clips you selected for download are now available:</p>
+      <a href="${downloadUrl}" style="background-color: #007bff; color: #fff; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Download MySquadReel</a>
+      <p><em>This link will only be active for 24 hours.</em></p>
+      <p>&nbsp;</p>
+      <p><img src="https://squadreel.com/squadreellogo.png" style="width:20%" alt="img"></p>
+      </div>
+      `,
     });
     return true; // Email sent successfully
   } catch (error) {
