@@ -11,8 +11,9 @@ const sgTransport = require("nodemailer-sendgrid-transport");
 const dbConnect = require("./db/dbConnect");
 const User = require("./db/userModel");
 const Video = require("./db/videoModel");
+const Annotation = require("./db/annotationModel");  // New import for Annotation model
 const auth = require("./auth");
-const videoRoutes = require("./controllers/video.controller"); // Assuming video controller
+const videoRoutes = require("./controllers/video.controller");
 const ffmpeg = require('fluent-ffmpeg');
 
 // Import necessary modules for aws and emailjs jobs
@@ -20,9 +21,9 @@ const MediaConvert = require("aws-sdk/clients/mediaconvert");
 const AWS = require("aws-sdk");
 const emailjs = require("emailjs-com");
 
-// //videomerge
-const { execSync } = require('child_process'); // For ffmpeg execution
-const mergeVideos = require('./mergeVideos.js'); // Adjust the path
+// videomerge
+const { execSync } = require('child_process');
+const mergeVideos = require('./mergeVideos.js');
 
 // execute database connection
 dbConnect();
@@ -32,7 +33,7 @@ app.use(cors());
 
 // Curb Cores Error by adding a header here
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*"); // Allow requests from any origin (adjust for production)
+  res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader(
     "Access-Control-Allow-Headers",
     "Origin, X-Requested-With, Content, Accept, Content-Type, Authorization"
@@ -49,13 +50,12 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // test
-
 app.get("/", (request, response, next) => {
   response.json({ message: "Hey! This is your server response!" });
   next();
 });
 
-//videomerge endpoint
+// videomerge endpoint
 app.post('/merge-videos', async (req, res) => {
   const { videoLinks } = req.body;
 
@@ -63,15 +63,15 @@ app.post('/merge-videos', async (req, res) => {
     const mergedFilename = await mergeVideos(videoLinks);
     if (mergedFilename) {
       res.setHeader('Content-Type', 'video/mp4');
-      res.setHeader('Accept-Ranges', 'bytes'); // Allow byte-range requests
+      res.setHeader('Accept-Ranges', 'bytes');
 
-      const mergedStream = fs.createWriteStream('merged_video.mp4'); // Adjust filename if needed
+      const mergedStream = fs.createWriteStream('merged_video.mp4');
 
       ffmpeg()
         // ... (your existing ffmpeg command logic for merging videos)
         .on('end', () => {
           console.log('Videos merged successfully!');
-          mergedStream.close(); // Close the stream after ffmpeg finishes
+          mergedStream.close();
         })
         .pipe(mergedStream);
 
@@ -80,7 +80,7 @@ app.post('/merge-videos', async (req, res) => {
         res.status(500).send('Error streaming video');
       });
 
-      mergedStream.pipe(res); // Pipe the stream to the response
+      mergedStream.pipe(res);
     } else {
       res.status(500).send('Error merging videos');
     }
@@ -90,31 +90,26 @@ app.post('/merge-videos', async (req, res) => {
   }
 });
 
-app.use("/api/video", videoRoutes); // Use video routes for video endpoints
+app.use("/api/video", videoRoutes);
 
 // register endpoint
 app.post("/register", (request, response) => {
-  // hash the password
   bcrypt
     .hash(request.body.password, 10)
     .then((hashedPassword) => {
-      // create a new user instance and collect the data
       const user = new User({
         username: request.body.username,
         password: hashedPassword,
       });
 
-      // save the new user
       user
         .save()
-        // return success if the new user is added to the database successfully
         .then((result) => {
           response.status(201).send({
             message: "User Created Successfully",
             result,
           });
         })
-        // catch erroe if the new user wasn't added successfully to the database
         .catch((error) => {
           response.status(500).send({
             message: "Error creating user",
@@ -122,7 +117,6 @@ app.post("/register", (request, response) => {
           });
         });
     })
-    // catch error if the password hash isn't successful
     .catch((e) => {
       response.status(500).send({
         message: "Password was not hashed successfully",
@@ -133,49 +127,36 @@ app.post("/register", (request, response) => {
 
 // registervideo endpoint
 app.post("/addvideo", (request, response) => {
-      // create a new video instance and collect the data
-      const video = new Video({
-        videoname: request.body.videoname,
-        game: request.body.game,
-        link: request.body.link,
-        tags: request.body.tags,
-      });
+  const video = new Video({
+    videoname: request.body.videoname,
+    game: request.body.game,
+    link: request.body.link,
+    tags: request.body.tags,
+  });
 
-      // save the new video
-      video
-        .save()
-        // return success if the new video is added to the database successfully
-        .then((result) => {
-          response.status(201).send({
-            message: "Video Created Successfully",
-            result,
-          });
-        })
-        // catch erroe if the new video wasn't added successfully to the database
-        .catch((error) => {
-          response.status(500).send({
-            message: "Error creating video",
-            error,
-          });
-        });
+  video
+    .save()
+    .then((result) => {
+      response.status(201).send({
+        message: "Video Created Successfully",
+        result,
+      });
     })
-;
+    .catch((error) => {
+      response.status(500).send({
+        message: "Error creating video",
+        error,
+      });
+    });
+});
 
 // login endpoint
 app.post("/login", (request, response) => {
-  // check if username exists
   User.findOne({ username: request.body.username })
-
-    // if username exists
     .then((user) => {
-      // compare the password entered and the hashed password found
       bcrypt
         .compare(request.body.password, user.password)
-
-        // if the passwords match
         .then((passwordCheck) => {
-
-          // check if password matches
           if(!passwordCheck) {
             return response.status(400).send({
               message: "Passwords does not match",
@@ -183,7 +164,6 @@ app.post("/login", (request, response) => {
             });
           }
 
-          //   create JWT token
           const token = jwt.sign(
             {
               userId: user._id,
@@ -194,14 +174,12 @@ app.post("/login", (request, response) => {
             { expiresIn: "24h" }
           );
 
-          //   return success response
           response.status(200).send({
             message: "Login Successful",
             username: user.username,
             token,
           });
         })
-        // catch error if password do not match
         .catch((error) => {
           response.status(400).send({
             message: "Passwords does not match",
@@ -209,7 +187,6 @@ app.post("/login", (request, response) => {
           });
         });
     })
-    // catch error if username does not exist
     .catch((e) => {
       response.status(404).send({
         message: "Username not found",
@@ -228,12 +205,11 @@ app.get("/auth-endpoint", auth, (request, response) => {
   response.send({ message: "Select a game below" });
 });
 
-// Moving CreateSquadReel logic to backend
 // Set up AWS credentials
 AWS.config.update({
   accessKeyId: process.env.REACT_APP_AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.REACT_APP_AWS_SECRET_ACCESS_KEY,
-  region: "us-east-1", // Adjust the region as needed
+  region: "us-east-1",
 });
 
 const s3 = new AWS.S3();
@@ -241,7 +217,7 @@ const s3 = new AWS.S3();
 // Set up SendGrid transporter
 const transporter = nodemailer.createTransport(sgTransport({
   auth: {
-    api_key: process.env.SENDGRID_API_KEY, // Your SendGrid API key
+    api_key: process.env.SENDGRID_API_KEY,
   },
 }));
 
@@ -250,31 +226,23 @@ app.post("/create-mysquadreel", async (req, res) => {
   const { playlistContent, userEmail } = req.body;
 
   try {
-    // Create MediaConvert job
     const downloadUrl = await createMySquadReel(playlistContent);
-
-    // Send email with the download URL
     const emailSent = await sendEmail(userEmail, downloadUrl);
 
     if (emailSent) {
-      // Respond to client indicating success
       res.status(200).send({ message: "MySquadReel creation and email sending successful" });
     } else {
-      // Handle if email sending fails
       res.status(500).send({ message: "Error sending email" });
     }
   } catch (error) {
     console.error("Error creating MySquadReel and sending email:", error);
-    // Handle errors and respond accordingly
     res.status(500).send({ message: "Error creating MySquadReel and sending email" });
   }
 });
 
 async function createMySquadReel(playlistContent) {
-  // Initialize MediaConvert instance
   const mediaconvert = new MediaConvert({ apiVersion: "2017-08-29" });
 
-  // Set up job parameters
   const jobParams = {
     Role: "arn:aws:iam::816121288668:role/AWSMediaConvertReact",
     Settings: {
@@ -327,18 +295,15 @@ async function createMySquadReel(playlistContent) {
     }
   };
 
-  // Create MediaConvert job
   const job = await mediaconvert.createJob(jobParams).promise();
 
-  // Wait for job completion
   let jobStatus;
   do {
     const { Job } = await mediaconvert.getJob({ Id: job.Job.Id }).promise();
     jobStatus = Job.Status;
-    await new Promise((resolve) => setTimeout(resolve, 5000)); // Wait for 5 seconds before checking job status again
+    await new Promise((resolve) => setTimeout(resolve, 5000));
   } while (jobStatus !== "COMPLETE");
 
-  // Generate download URL for the output file
   const bucket = "mysquadreeldownload";
   const key = "MySquadReel" + jobParams.Settings.OutputGroups[0].Outputs[0].NameModifier + ".mp4";
   const params = {
@@ -353,10 +318,9 @@ async function createMySquadReel(playlistContent) {
 
 async function sendEmail(userEmail, downloadUrl) {
   try {
-    // Send email using nodemailer
     await transporter.sendMail({
-      from: '"SquadReel Admin" <contact@squadreel.com>', // Sender name and email address
-      to: userEmail, // Recipient email address
+      from: '"SquadReel Admin" <contact@squadreel.com>',
+      to: userEmail,
       subject: 'Your highlights are here 🎞️',
       html: `
       <div style="font-family: Arial, sans-serif;">
@@ -369,34 +333,28 @@ async function sendEmail(userEmail, downloadUrl) {
       </div>
       `,
     });
-    return true; // Email sent successfully
+    return true;
   } catch (error) {
     console.error('Error sending email:', error);
-    return false; // Email sending failed
+    return false;
   }
 }
 
 // New endpoint for editing video
 app.put("/api/video/:videoName", auth, async (req, res) => {
-  // Get video name from URL parameter
   const videoName = req.params.videoName;
-
-  // Extract updated video data from request body
   const updatedVideo = req.body;
 
   try {
-    // Find the video by name (assuming videoName is unique)
     const existingVideo = await Video.findOne({ videoname: videoName });
 
     if (!existingVideo) {
       return res.status(404).send({ message: "Video not found" });
     }
 
-    // Update existing video properties with the provided data
-    existingVideo.link = updatedVideo.link || existingVideo.link; // Update link if provided
-    existingVideo.tags = updatedVideo.tags || existingVideo.tags; // Update tags if provided
+    existingVideo.link = updatedVideo.link || existingVideo.link;
+    existingVideo.tags = updatedVideo.tags || existingVideo.tags;
 
-    // Save the updated video
     await existingVideo.save();
 
     res.status(200).send({ message: "Video updated successfully" });
@@ -406,9 +364,10 @@ app.put("/api/video/:videoName", auth, async (req, res) => {
   }
 });
 
+// Modified endpoint to include annotations
 app.get("/api/video/:videoName", async (req, res) => {
   const videoName = req.params.videoName;
-  const game = req.query.game; // Access game from query parameter
+  const game = req.query.game;
 
   try {
     const video = await Video.findOne({ videoname: videoName, game: game });
@@ -417,10 +376,60 @@ app.get("/api/video/:videoName", async (req, res) => {
       return res.status(404).send({ message: "Video not found" });
     }
 
-    // Handle retrieving and sending the video data...
+    const annotations = await Annotation.find({ videoId: video._id });
+
+    res.json({ video, annotations });
   } catch (error) {
     console.error(error);
-    res.status(500).send({ message: "Error fetching video" });
+    res.status(500).send({ message: "Error fetching video and annotations" });
+  }
+});
+
+// New annotation routes
+app.get("/api/annotations/:videoId", auth, async (req, res) => {
+  try {
+    const annotations = await Annotation.find({ videoId: req.params.videoId });
+    res.json(annotations);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching annotations', error });
+  }
+});
+
+app.post("/api/annotations", auth, async (req, res) => {
+  try {
+    const newAnnotation = new Annotation(req.body);
+    await newAnnotation.save();
+    res.status(201).json(newAnnotation);
+  } catch (error) {
+    res.status(500).json({ message: 'Error creating annotation', error });
+  }
+});
+
+app.put("/api/annotations/:id", auth, async (req, res) => {
+  try {
+    const updatedAnnotation = await Annotation.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+    if (!updatedAnnotation) {
+      return res.status(404).json({ message: 'Annotation not found' });
+    }
+    res.json(updatedAnnotation);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating annotation', error });
+  }
+});
+
+app.delete("/api/annotations/:id", auth, async (req, res) => {
+  try {
+    const deletedAnnotation = await Annotation.findByIdAndDelete(req.params.id);
+    if (!deletedAnnotation) {
+      return res.status(404).json({ message: 'Annotation not found' });
+    }
+    res.json({ message: 'Annotation deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting annotation', error });
   }
 });
 
