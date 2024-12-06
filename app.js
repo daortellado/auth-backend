@@ -161,6 +161,20 @@ app.post("/addvideo", (request, response) => {
     })
 ;
 
+//archive season
+app.post("/api/archive-season", auth, async (req, res) => {
+  const { seasonName } = req.body;
+  try {
+    await Video.updateMany(
+      { season: "current" },
+      { $set: { season: seasonName } }
+    );
+    res.status(200).send({ message: "Season archived successfully" });
+  } catch (error) {
+    res.status(500).send({ message: "Error archiving season", error });
+  }
+});
+
 // login endpoint
 app.post("/login", (request, response) => {
   // check if username exists
