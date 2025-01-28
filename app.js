@@ -13,7 +13,8 @@ const User = require("./db/userModel");
 const Video = require("./db/videoModel");
 const Tactic = require("./db/tacticsModel");
 const auth = require("./auth");
-const videoRoutes = require("./controllers/video.controller"); // Assuming video controller
+const videoRoutes = require("./controllers/video.controller");
+const tacticsRoutes = require("./controllers/tactics.controller");
 const ffmpeg = require('fluent-ffmpeg');
 
 // Import necessary modules for aws and emailjs jobs
@@ -92,6 +93,7 @@ app.post('/merge-videos', async (req, res) => {
 });
 
 app.use("/api/video", videoRoutes); // Use video routes for video endpoints
+app.use("/api/tactics", tacticsRoutes);
 
 // register endpoint
 app.post("/register", (request, response) => {
