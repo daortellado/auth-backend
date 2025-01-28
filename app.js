@@ -11,6 +11,7 @@ const sgTransport = require("nodemailer-sendgrid-transport");
 const dbConnect = require("./db/dbConnect");
 const User = require("./db/userModel");
 const Video = require("./db/videoModel");
+const Tactic = require("./db/tacticsModel");
 const auth = require("./auth");
 const videoRoutes = require("./controllers/video.controller"); // Assuming video controller
 const ffmpeg = require('fluent-ffmpeg');
@@ -436,6 +437,46 @@ app.get("/api/video/:videoName", async (req, res) => {
     console.error(error);
     res.status(500).send({ message: "Error fetching video" });
   }
+});
+
+app.post("/addtactic", (request, response) => {
+  // create a new tactic instance and collect the data
+  const tactic = new Tactic({
+    videoname: request.body.videoname,
+    session: request.body.session,
+    link: request.body.link
+  });
+
+  // save the new tactic
+  tactic
+    .save()
+    // return success if the new tactic is added to the database successfully
+    .then((result) => {
+      response.status(201).send({
+        message: "Tactic Created Successfully",
+        result,
+      });
+    })
+    // catch error if the new tactic wasn't added successfully to the database
+    .catch((error) => {
+      response.status(500).send({
+        message: "Error creating tactic",
+        error,
+      });
+    });
+});
+
+app.post("/api/archive-tactics-season", auth, async (req, res) => {
+const { seasonName } = req.body;
+try {
+await Tactic.updateMany(
+  { season: "current" },
+  { $set: { season: seasonName } }
+);
+res.status(200).send({ message: "Tactics season archived successfully" });
+} catch (error) {
+res.status(500).send({ message: "Error archiving tactics season", error });
+}
 });
 
 module.exports = app;
