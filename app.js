@@ -393,27 +393,26 @@ async function sendEmail(userEmail, downloadUrl) {
   }
 }
 
-// New endpoint for editing video
+// New endpoint for editing video - UPDATED TO BE SPECIFIC
 app.put("/api/video/:videoName", auth, async (req, res) => {
-  // Get video name from URL parameter
   const videoName = req.params.videoName;
-
-  // Extract updated video data from request body
-  const updatedVideo = req.body;
+  const gameName = req.body.game; // Get the game name from the request body
 
   try {
-    // Find the video by name (assuming videoName is unique)
-    const existingVideo = await Video.findOne({ videoname: videoName });
+    // FIX: Search by BOTH videoname and game to ensure uniqueness
+    const existingVideo = await Video.findOne({ 
+      videoname: videoName, 
+      game: gameName 
+    });
 
     if (!existingVideo) {
-      return res.status(404).send({ message: "Video not found" });
+      return res.status(404).send({ message: "Video not found in this specific game" });
     }
 
-    // Update existing video properties with the provided data
-    existingVideo.link = updatedVideo.link || existingVideo.link; // Update link if provided
-    existingVideo.tags = updatedVideo.tags || existingVideo.tags; // Update tags if provided
+    // Update existing video properties
+    existingVideo.link = req.body.link || existingVideo.link;
+    existingVideo.tags = req.body.tags || existingVideo.tags;
 
-    // Save the updated video
     await existingVideo.save();
 
     res.status(200).send({ message: "Video updated successfully" });
